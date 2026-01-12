@@ -202,7 +202,6 @@ const renderTrophies = () => {
       '<div class="creator-results"><p class="muted">Firebase non disponibile. Apri il sito da http://localhost o HTTPS.</p></div>';
     return;
   }
-  seedCollectionOnce("trophies", defaultTrophies);
   subscribeCollection("trophies", (trophies) => {
     if (!trophies.length) {
       grid.innerHTML =
