@@ -51,27 +51,61 @@ const defaultTrophies = [
 ];
 
 const STORAGE = {
-  events: "myagi_events",
-  trainings: "myagi_trainings",
-  trophies: "myagi_trophies",
   adminPassword: "myagi_admin_password",
 };
 
-const getStoredList = (key, fallback) => {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) {
-      localStorage.setItem(key, JSON.stringify(fallback));
-      return fallback;
-    }
-    return JSON.parse(raw);
-  } catch (error) {
-    return fallback;
-  }
+const firebaseConfig = {
+  apiKey: "AIzaSyAOpQpKoGd2HGYih5-yBamk5Q5Lx4XtwC8",
+  authDomain: "myago-do-club.firebaseapp.com",
+  projectId: "myago-do-club",
+  storageBucket: "myago-do-club.firebasestorage.app",
+  messagingSenderId: "933756491648",
+  appId: "1:933756491648:web:e29fef12414d3832c41365",
+  measurementId: "G-RTRBE38TJM",
 };
 
-const saveList = (key, list) => {
-  localStorage.setItem(key, JSON.stringify(list));
+let firestore = null;
+if (window.firebase && window.firebase.apps) {
+  if (!window.firebase.apps.length) {
+    window.firebase.initializeApp(firebaseConfig);
+  }
+  firestore = window.firebase.firestore();
+}
+
+const seedCollection = async (name, defaults) => {
+  if (!firestore) {
+    return;
+  }
+  const snapshot = await firestore.collection(name).limit(1).get();
+  if (!snapshot.empty) {
+    return;
+  }
+  const batch = firestore.batch();
+  defaults.forEach((item, index) => {
+    const ref = firestore.collection(name).doc(`default-${index + 1}`);
+    batch.set(ref, {
+      ...item,
+      createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  });
+  await batch.commit();
+};
+
+const subscribeCollection = (name, onData) => {
+  if (!firestore) {
+    onData([]);
+    return;
+  }
+  firestore
+    .collection(name)
+    .orderBy("createdAt", "desc")
+    .onSnapshot((snapshot) => {
+      const items = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+      onData(items);
+    });
 };
 
 const isAdminLoggedIn = () =>
@@ -82,27 +116,34 @@ const renderEvents = () => {
   if (!grid) {
     return;
   }
-  const events = getStoredList(STORAGE.events, defaultEvents);
-  grid.innerHTML = events
-    .map(
-      (event) => `
-        <article class="event-card">
-          <div>
-            <p class="event-date">${event.date}</p>
-            <h2>${event.title}</h2>
-            <p>${event.description}</p>
-          </div>
-          <button class="cta" data-event="${event.title}">Partecipo</button>
-        </article>
-      `
-    )
-    .join("");
+  seedCollection("events", defaultEvents);
+  subscribeCollection("events", (events) => {
+    if (!events.length) {
+      grid.innerHTML =
+        '<div class="creator-results"><p class="muted">Nessun evento disponibile.</p></div>';
+      return;
+    }
+    grid.innerHTML = events
+      .map(
+        (event) => `
+          <article class="event-card">
+            <div>
+              <p class="event-date">${event.date || ""}</p>
+              <h2>${event.title || ""}</h2>
+              <p>${event.description || ""}</p>
+            </div>
+            <button class="cta" data-event="${event.title || ""}">Partecipo</button>
+          </article>
+        `
+      )
+      .join("");
 
-  const eventButtons = grid.querySelectorAll(".cta[data-event]");
-  eventButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      const active = button.classList.toggle("active");
-      button.textContent = active ? "Partecipo!" : "Partecipo";
+    const eventButtons = grid.querySelectorAll(".cta[data-event]");
+    eventButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const active = button.classList.toggle("active");
+        button.textContent = active ? "Partecipo!" : "Partecipo";
+      });
     });
   });
 };
@@ -112,20 +153,27 @@ const renderTrainings = () => {
   if (!grid) {
     return;
   }
-  const trainings = getStoredList(STORAGE.trainings, defaultTrainings);
-  grid.innerHTML = trainings
-    .map(
-      (training) => `
-        <article class="event-card">
-          <div>
-            <p class="event-date">${training.date}</p>
-            <h2>${training.title}</h2>
-            <p>${training.description}</p>
-          </div>
-        </article>
-      `
-    )
-    .join("");
+  seedCollection("trainings", defaultTrainings);
+  subscribeCollection("trainings", (trainings) => {
+    if (!trainings.length) {
+      grid.innerHTML =
+        '<div class="creator-results"><p class="muted">Nessun allenamento disponibile.</p></div>';
+      return;
+    }
+    grid.innerHTML = trainings
+      .map(
+        (training) => `
+          <article class="event-card">
+            <div>
+              <p class="event-date">${training.date || ""}</p>
+              <h2>${training.title || ""}</h2>
+              <p>${training.description || ""}</p>
+            </div>
+          </article>
+        `
+      )
+      .join("");
+  });
 };
 
 const renderTrophies = () => {
@@ -133,18 +181,25 @@ const renderTrophies = () => {
   if (!grid) {
     return;
   }
-  const trophies = getStoredList(STORAGE.trophies, defaultTrophies);
-  grid.innerHTML = trophies
-    .map(
-      (trophy) => `
-        <article class="trophy-card">
-          <h2>${trophy.title}</h2>
-          <p class="trophy-name">${trophy.name}</p>
-          <p>${trophy.description}</p>
-        </article>
-      `
-    )
-    .join("");
+  seedCollection("trophies", defaultTrophies);
+  subscribeCollection("trophies", (trophies) => {
+    if (!trophies.length) {
+      grid.innerHTML =
+        '<div class="creator-results"><p class="muted">Nessun trofeo disponibile.</p></div>';
+      return;
+    }
+    grid.innerHTML = trophies
+      .map(
+        (trophy) => `
+          <article class="trophy-card">
+            <h2>${trophy.title || ""}</h2>
+            <p class="trophy-name">${trophy.name || ""}</p>
+            <p>${trophy.description || ""}</p>
+          </article>
+        `
+      )
+      .join("");
+  });
 };
 
 renderEvents();
@@ -158,89 +213,38 @@ const renderAdminLists = () => {
   if (!eventList || !trainingList || !trophyList) {
     return;
   }
-  const events = getStoredList(STORAGE.events, defaultEvents);
-  const trainings = getStoredList(STORAGE.trainings, defaultTrainings);
-  const trophies = getStoredList(STORAGE.trophies, defaultTrophies);
+  const renderAdminCollection = (name, listEl) => {
+    if (!listEl) {
+      return;
+    }
+    subscribeCollection(name, (items) => {
+      listEl.innerHTML = items
+        .map(
+          (item) => `
+            <div class="admin-item">
+              <span>${item.title || ""}</span>
+              <button type="button" data-doc-id="${item.id}">Elimina</button>
+            </div>
+          `
+        )
+        .join("");
 
-  eventList.innerHTML = events
-    .map(
-      (event, index) => `
-        <div class="admin-item">
-          <span>${event.title}</span>
-          <button type="button" data-event-index="${index}">Elimina</button>
-        </div>
-      `
-    )
-    .join("");
-
-  trainingList.innerHTML = trainings
-    .map(
-      (training, index) => `
-        <div class="admin-item">
-          <span>${training.title}</span>
-          <button type="button" data-training-index="${index}">Elimina</button>
-        </div>
-      `
-    )
-    .join("");
-
-  trophyList.innerHTML = trophies
-    .map(
-      (trophy, index) => `
-        <div class="admin-item">
-          <span>${trophy.title}</span>
-          <button type="button" data-trophy-index="${index}">Elimina</button>
-        </div>
-      `
-    )
-    .join("");
-
-  eventList.querySelectorAll("button[data-event-index]").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (!isAdminLoggedIn()) {
-        alert("Devi fare login admin per eliminare un evento.");
-        return;
-      }
-      const index = Number(button.dataset.eventIndex);
-      const list = getStoredList(STORAGE.events, defaultEvents);
-      list.splice(index, 1);
-      saveList(STORAGE.events, list);
-      renderEvents();
-      renderAdminLists();
-    });
-  });
-
-  trainingList
-    .querySelectorAll("button[data-training-index]")
-    .forEach((button) => {
-      button.addEventListener("click", () => {
-        if (!isAdminLoggedIn()) {
-          alert("Devi fare login admin per eliminare un allenamento.");
-          return;
-        }
-        const index = Number(button.dataset.trainingIndex);
-        const list = getStoredList(STORAGE.trainings, defaultTrainings);
-        list.splice(index, 1);
-        saveList(STORAGE.trainings, list);
-        renderTrainings();
-        renderAdminLists();
+      listEl.querySelectorAll("button[data-doc-id]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          if (!isAdminLoggedIn()) {
+            alert("Devi fare login admin per eliminare.");
+            return;
+          }
+          const docId = button.dataset.docId;
+          await firestore.collection(name).doc(docId).delete();
+        });
       });
     });
+  };
 
-  trophyList.querySelectorAll("button[data-trophy-index]").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (!isAdminLoggedIn()) {
-        alert("Devi fare login admin per eliminare un trofeo.");
-        return;
-      }
-      const index = Number(button.dataset.trophyIndex);
-      const list = getStoredList(STORAGE.trophies, defaultTrophies);
-      list.splice(index, 1);
-      saveList(STORAGE.trophies, list);
-      renderTrophies();
-      renderAdminLists();
-    });
-  });
+  renderAdminCollection("events", eventList);
+  renderAdminCollection("trainings", trainingList);
+  renderAdminCollection("trophies", trophyList);
 };
 
 renderAdminLists();
@@ -785,12 +789,15 @@ if (eventForm) {
     const date = document.getElementById("event-date").value.trim();
     const title = document.getElementById("event-title").value.trim();
     const description = document.getElementById("event-desc").value.trim();
-    const events = getStoredList(STORAGE.events, defaultEvents);
-    events.unshift({ date, title, description });
-    saveList(STORAGE.events, events);
+    if (firestore) {
+      firestore.collection("events").add({
+        date,
+        title,
+        description,
+        createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
     eventForm.reset();
-    renderEvents();
-    renderAdminLists();
   });
 }
 
@@ -804,12 +811,15 @@ if (trainingForm) {
     const date = document.getElementById("training-date").value.trim();
     const title = document.getElementById("training-title").value.trim();
     const description = document.getElementById("training-desc").value.trim();
-    const trainings = getStoredList(STORAGE.trainings, defaultTrainings);
-    trainings.unshift({ date, title, description });
-    saveList(STORAGE.trainings, trainings);
+    if (firestore) {
+      firestore.collection("trainings").add({
+        date,
+        title,
+        description,
+        createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
     trainingForm.reset();
-    renderTrainings();
-    renderAdminLists();
   });
 }
 
@@ -823,12 +833,15 @@ if (trophyForm) {
     const title = document.getElementById("trophy-title").value.trim();
     const name = document.getElementById("trophy-name").value.trim();
     const description = document.getElementById("trophy-desc").value.trim();
-    const trophies = getStoredList(STORAGE.trophies, defaultTrophies);
-    trophies.unshift({ title, name, description });
-    saveList(STORAGE.trophies, trophies);
+    if (firestore) {
+      firestore.collection("trophies").add({
+        title,
+        name,
+        description,
+        createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
     trophyForm.reset();
-    renderTrophies();
-    renderAdminLists();
   });
 }
 
@@ -856,13 +869,26 @@ if (resetButton) {
       alert("Devi fare login admin per ripristinare i dati.");
       return;
     }
-    saveList(STORAGE.events, defaultEvents);
-    saveList(STORAGE.trainings, defaultTrainings);
-    saveList(STORAGE.trophies, defaultTrophies);
-    renderEvents();
-    renderTrainings();
-    renderTrophies();
-    renderAdminLists();
+    if (!firestore) {
+      return;
+    }
+    const resetCollection = async (name, defaults) => {
+      const snapshot = await firestore.collection(name).get();
+      const batch = firestore.batch();
+      snapshot.forEach((docSnap) => batch.delete(docSnap.ref));
+      defaults.forEach((item, index) => {
+        const ref = firestore.collection(name).doc(`default-${index + 1}`);
+        batch.set(ref, {
+          ...item,
+          createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      });
+      await batch.commit();
+    };
+
+    resetCollection("events", defaultEvents);
+    resetCollection("trainings", defaultTrainings);
+    resetCollection("trophies", defaultTrophies);
   });
 }
 
