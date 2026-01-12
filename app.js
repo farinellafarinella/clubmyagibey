@@ -70,6 +70,9 @@ if (window.firebase && window.firebase.apps) {
     window.firebase.initializeApp(firebaseConfig);
   }
   firestore = window.firebase.firestore();
+  localStorage.removeItem("myagi_events");
+  localStorage.removeItem("myagi_trainings");
+  localStorage.removeItem("myagi_trophies");
 }
 
 const seedCollection = async (name, defaults) => {
@@ -116,6 +119,11 @@ const renderEvents = () => {
   if (!grid) {
     return;
   }
+  if (!firestore) {
+    grid.innerHTML =
+      '<div class="creator-results"><p class="muted">Firebase non disponibile. Apri il sito da http://localhost o HTTPS.</p></div>';
+    return;
+  }
   seedCollection("events", defaultEvents);
   subscribeCollection("events", (events) => {
     if (!events.length) {
@@ -153,6 +161,11 @@ const renderTrainings = () => {
   if (!grid) {
     return;
   }
+  if (!firestore) {
+    grid.innerHTML =
+      '<div class="creator-results"><p class="muted">Firebase non disponibile. Apri il sito da http://localhost o HTTPS.</p></div>';
+    return;
+  }
   seedCollection("trainings", defaultTrainings);
   subscribeCollection("trainings", (trainings) => {
     if (!trainings.length) {
@@ -179,6 +192,11 @@ const renderTrainings = () => {
 const renderTrophies = () => {
   const grid = document.getElementById("trophy-grid");
   if (!grid) {
+    return;
+  }
+  if (!firestore) {
+    grid.innerHTML =
+      '<div class="creator-results"><p class="muted">Firebase non disponibile. Apri il sito da http://localhost o HTTPS.</p></div>';
     return;
   }
   seedCollection("trophies", defaultTrophies);
