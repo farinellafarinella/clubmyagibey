@@ -75,12 +75,14 @@ if (window.firebase && window.firebase.apps) {
   localStorage.removeItem("myagi_trophies");
 }
 
-const seedCollection = async (name, defaults) => {
+const seedCollectionOnce = async (name, defaults) => {
   if (!firestore) {
     return;
   }
-  const snapshot = await firestore.collection(name).limit(1).get();
-  if (!snapshot.empty) {
+  const metaRef = firestore.collection("meta").doc("seed");
+  const metaSnap = await metaRef.get();
+  const meta = metaSnap.exists ? metaSnap.data() : {};
+  if (meta && meta[name]) {
     return;
   }
   const batch = firestore.batch();
@@ -91,6 +93,7 @@ const seedCollection = async (name, defaults) => {
       createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
     });
   });
+  batch.set(metaRef, { ...meta, [name]: true }, { merge: true });
   await batch.commit();
 };
 
@@ -124,7 +127,7 @@ const renderEvents = () => {
       '<div class="creator-results"><p class="muted">Firebase non disponibile. Apri il sito da http://localhost o HTTPS.</p></div>';
     return;
   }
-  seedCollection("events", defaultEvents);
+  seedCollectionOnce("events", defaultEvents);
   subscribeCollection("events", (events) => {
     if (!events.length) {
       grid.innerHTML =
@@ -166,7 +169,7 @@ const renderTrainings = () => {
       '<div class="creator-results"><p class="muted">Firebase non disponibile. Apri il sito da http://localhost o HTTPS.</p></div>';
     return;
   }
-  seedCollection("trainings", defaultTrainings);
+  seedCollectionOnce("trainings", defaultTrainings);
   subscribeCollection("trainings", (trainings) => {
     if (!trainings.length) {
       grid.innerHTML =
@@ -199,7 +202,7 @@ const renderTrophies = () => {
       '<div class="creator-results"><p class="muted">Firebase non disponibile. Apri il sito da http://localhost o HTTPS.</p></div>';
     return;
   }
-  seedCollection("trophies", defaultTrophies);
+  seedCollectionOnce("trophies", defaultTrophies);
   subscribeCollection("trophies", (trophies) => {
     if (!trophies.length) {
       grid.innerHTML =
@@ -901,6 +904,8 @@ if (resetButton) {
           createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
         });
       });
+      const metaRef = firestore.collection("meta").doc("seed");
+      batch.set(metaRef, { [name]: true }, { merge: true });
       await batch.commit();
     };
 
