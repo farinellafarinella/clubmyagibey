@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Myagi Do Beyblade Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Work+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <img class="brand-logo" src="images/logo-club.png" alt="Logo Myagi Do Beyblade" />
+      <div>
+        <p class="brand-title">Myagi Do Beyblade</p>
+        <p class="brand-subtitle">Club Beyblade Emilia Romagna</p>
+      </div>
+    </div>
+    <nav class="site-nav">
+      <a class="active" href="index.html">Unisciti al club</a>
+      <a href="tornei.html">Tornei e eventi</a>
+      <a href="trofei.html">Trofei</a>
+      <a href="crea-bey.html">Crea il tuo bey</a>
+      <a href="allenamenti.html">Allenamenti settimanali</a>
+      <a href="team.html">Condividi il tuo team</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">La casa dei blader di zona</p>
+        <h1>Unisciti al club Myagi Do Beyblade</h1>
+        <p class="lead">
+          Accettiamo giocatori da Ravenna, Faenza, Forli e Cesena, oltre alle zone limitrofe.
+          Se sei pronto a scendere in arena, presentati con il tuo nome.
+        </p>
+        <div class="hero-tags">
+          <span>Allenamenti settimanali</span>
+          <span>Community attiva</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="auth-board">
+      <div class="auth-card">
+        <h2>Accesso al club</h2>
+        <div class="auth-tabs">
+          <button class="auth-tab active" type="button" data-tab="email">Email</button>
+          <button class="auth-tab" type="button" data-tab="phone">Telefono</button>
+        </div>
+
+        <div class="auth-panel active" id="auth-email">
+          <label>
+            Citta
+            <input type="text" id="auth-city-input" placeholder="Es. Ravenna" />
+          </label>
+          <label>
+            Email
+            <input type="email" id="auth-email-input" placeholder="nome@email.it" />
+          </label>
+          <label>
+            Password
+            <input type="password" id="auth-password-input" placeholder="Min 6 caratteri" />
+          </label>
+          <div class="auth-actions">
+            <button class="cta" type="button" id="email-register">Registrati</button>
+            <button class="cta ghost" type="button" id="email-login">Accedi</button>
+          </div>
+        </div>
+
+        <div class="auth-panel" id="auth-phone">
+          <label>
+            Citta
+            <input type="text" id="phone-city-input" placeholder="Es. Ravenna" />
+          </label>
+          <label>
+            Numero di telefono
+            <input type="tel" id="phone-input" placeholder="+39 333 1234567" />
+          </label>
+          <div class="auth-actions">
+            <button class="cta" type="button" id="send-code">Invia codice</button>
+          </div>
+          <label>
+            Codice SMS
+            <input type="text" id="sms-code" placeholder="123456" />
+          </label>
+          <div class="auth-actions">
+            <button class="cta ghost" type="button" id="verify-code">Verifica</button>
+          </div>
+          <div id="recaptcha-container"></div>
+        </div>
+
+        <div class="auth-status" id="auth-status">
+          <p>Stato: non autenticato.</p>
+          <button class="cta ghost" type="button" id="logout-button" hidden>Logout</button>
+        </div>
+      </div>
+
+      <div class="board-card">
+        <div class="board-head">
+          <h2>Bacheca del club</h2>
+          <p id="member-count" class="muted">Membri registrati: -</p>
+        </div>
+        <form id="post-form" class="board-form">
+          <label>
+            Nome in bacheca
+            <input type="text" id="post-name" placeholder="Il tuo nome" />
+          </label>
+          <label>
+            Messaggio
+            <textarea id="post-message" rows="4" placeholder="Scrivi un messaggio"></textarea>
+          </label>
+          <button class="cta" type="submit">Pubblica</button>
+          <p class="form-note" id="post-note">Devi essere loggato per pubblicare.</p>
+        </form>
+        <div class="board-list" id="post-list"></div>
+      </div>
+    </section>
+
+    <section class="discipline-grid">
+      <div class="discipline-head">
+        <p class="eyebrow">Filosofia del club</p>
+        <h2>Le 3 discipline ispirate a Karate Kid</h2>
+        <p class="lead">
+          Myagi Do Beyblade si basa su tre scuole di gioco: resistenza, aggressione e caos controllato.
+        </p>
+      </div>
+      <article class="discipline-card">
+        <div class="discipline-media">
+          <img src="images/miyagi-do.png" alt="Miyagi-Do" />
+        </div>
+        <h3>Miyagi-Do · Controllo e Resistenza</h3>
+        <p><strong>Principio:</strong> difendersi, osservare, vincere per logoramento.</p>
+        <p><strong>Nei Beyblade:</strong> bey stamina o difesa.</p>
+        <p>Movimenti puliti, niente lanci rabbiosi. Aspetti che l'altro sbagli.</p>
+        <p>Vinci perche resti in piedi piu a lungo.</p>
+        <p class="discipline-quote">"Non forzare la vittoria. Lasciala arrivare."</p>
+      </article>
+      <article class="discipline-card">
+        <div class="discipline-media">
+          <img src="images/cobra-kai.png" alt="Cobra Kai" />
+        </div>
+        <h3>Cobra Kai · Aggressione Totale</h3>
+        <p><strong>Principio:</strong> colpisci per primo, colpisci forte.</p>
+        <p><strong>Nei Beyblade:</strong> bey attacco puro.</p>
+        <p>Launch violento, zero paura del ring-out.</p>
+        <p>O vinci subito o perdi subito.</p>
+        <p class="discipline-quote">"Strike first. No mercy. Anche nell'arena."</p>
+      </article>
+      <article class="discipline-card">
+        <div class="discipline-media">
+          <img src="images/eagle-fang.png" alt="Eagle Fang" />
+        </div>
+        <h3>Eagle Fang · Caos Controllato</h3>
+        <p><strong>Principio:</strong> imprevedibilita, istinto, pressione continua.</p>
+        <p><strong>Nei Beyblade:</strong> bey bilanciati o attack-tech.</p>
+        <p>Traiettorie sporche, colpi improvvisi.</p>
+        <p>Metti ansia all'avversario.</p>
+        <p class="discipline-quote">"Se non capiscono cosa stai facendo, sei gia avanti."</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Myagi Do Beyblade Club · Romagna · info@myagidobey.it</p>
+    <a class="admin-link" href="admin.html">Area admin</a>
+    <a class="whatsapp-link" href="https://chat.whatsapp.com/KB9i8q9AjGL2bUya3xvLXv">
+      <img class="whatsapp-icon" src="images/whatsapp.png" alt="" />
+      Entra nel gruppo WhatsApp
+    </a>
+  </footer>
+
+  <script src="app.js"></script>
+  <script type="module" src="firebase.js"></script>
+</body>
+</html>
