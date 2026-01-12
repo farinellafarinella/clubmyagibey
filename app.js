@@ -548,19 +548,6 @@ const results = document.getElementById("bey-results");
 const creatorLayout = document.querySelector(".creator-layout");
 
 if (form && bladeSelect && ratchetSelect && bitSelect && results) {
-  const loggedIn = localStorage.getItem("myagi_logged_in") === "true";
-  if (!loggedIn) {
-    if (creatorLayout) {
-      creatorLayout.innerHTML = `
-        <div class="creator-results">
-          <h2>Accesso richiesto</h2>
-          <p class="muted">Esegui il login per visualizzare "Crea il tuo bey".</p>
-          <p><a class="whatsapp-link" href="index.html">Vai alla home per accedere</a></p>
-        </div>
-      `;
-    }
-    return;
-  }
 
   const blades = new Set();
   const ratchets = new Set();
