@@ -65,15 +65,59 @@ const firebaseConfig = {
 };
 
 let firestore = null;
-if (window.firebase && window.firebase.apps) {
-  if (!window.firebase.apps.length) {
-    window.firebase.initializeApp(firebaseConfig);
+let firebaseReady = false;
+let firebaseLoading = false;
+
+const initFirestore = () => {
+  if (firebaseReady) {
+    return true;
   }
-  firestore = window.firebase.firestore();
-  localStorage.removeItem("myagi_events");
-  localStorage.removeItem("myagi_trainings");
-  localStorage.removeItem("myagi_trophies");
-}
+  if (window.firebase && window.firebase.apps) {
+    if (!window.firebase.apps.length) {
+      window.firebase.initializeApp(firebaseConfig);
+    }
+    firestore = window.firebase.firestore();
+    firebaseReady = true;
+    localStorage.removeItem("myagi_events");
+    localStorage.removeItem("myagi_trainings");
+    localStorage.removeItem("myagi_trophies");
+    return true;
+  }
+  return false;
+};
+
+const loadScript = (src, onLoad) => {
+  const script = document.createElement("script");
+  script.src = src;
+  script.onload = onLoad;
+  script.onerror = onLoad;
+  document.head.appendChild(script);
+};
+
+const ensureFirestore = (onReady) => {
+  if (initFirestore()) {
+    onReady();
+    return;
+  }
+  if (firebaseLoading) {
+    return;
+  }
+  firebaseLoading = true;
+  loadScript(
+    "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js",
+    () => {
+      loadScript(
+        "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js",
+        () => {
+          firebaseLoading = false;
+          if (initFirestore()) {
+            onReady();
+          }
+        }
+      );
+    }
+  );
+};
 
 const seedCollectionOnce = async (name, defaults) => {
   if (!firestore) {
@@ -124,7 +168,8 @@ const renderEvents = () => {
   }
   if (!firestore) {
     grid.innerHTML =
-      '<div class="creator-results"><p class="muted">Firebase non disponibile. Apri il sito da http://localhost o HTTPS.</p></div>';
+      '<div class="creator-results"><p class="muted">Caricamento eventi...</p></div>';
+    ensureFirestore(renderEvents);
     return;
   }
   seedCollectionOnce("events", defaultEvents);
@@ -166,7 +211,8 @@ const renderTrainings = () => {
   }
   if (!firestore) {
     grid.innerHTML =
-      '<div class="creator-results"><p class="muted">Firebase non disponibile. Apri il sito da http://localhost o HTTPS.</p></div>';
+      '<div class="creator-results"><p class="muted">Caricamento allenamenti...</p></div>';
+    ensureFirestore(renderTrainings);
     return;
   }
   seedCollectionOnce("trainings", defaultTrainings);
@@ -199,7 +245,8 @@ const renderTrophies = () => {
   }
   if (!firestore) {
     grid.innerHTML =
-      '<div class="creator-results"><p class="muted">Firebase non disponibile. Apri il sito da http://localhost o HTTPS.</p></div>';
+      '<div class="creator-results"><p class="muted">Caricamento trofei...</p></div>';
+    ensureFirestore(renderTrophies);
     return;
   }
   subscribeCollection("trophies", (trophies) => {
@@ -231,6 +278,10 @@ const renderAdminLists = () => {
   const trainingList = document.querySelector("#training-list .admin-list");
   const trophyList = document.querySelector("#trophy-list .admin-list");
   if (!eventList || !trainingList || !trophyList) {
+    return;
+  }
+  if (!firestore) {
+    ensureFirestore(renderAdminLists);
     return;
   }
   const renderAdminCollection = (name, listEl) => {
